@@ -183,9 +183,36 @@ if ($PACKAGE_SYSTEM eq 'dpkg')
 		  close FILES;
 		}
 	}
+	close PACKAGES;
 }
 
-close PACKAGES;
+# When system uses rpm
+elsif ($PACKAGE_SYSTEM eq 'rpm') 
+{
+  # Read rpm database of installed packages
+  use RPM2;
+  open PACKAGES, "rpm -qa --queryformat='\%{NAME}\\n'|";
+
+  while (<PACKAGES>)
+  {
+    my $pkg = $_;
+    chomp $pkg;
+    my $bestatime = undef;
+    my $list;
+    $popcon{$pkg}=[0,0,$pkg,"<NOFILES>"];
+
+    my $rpm_db = RPM2->open_rpm_db();
+    my $pkg_iter = $rpm_db->find_by_name_iter($pkg);
+    while (my $act_pkg = $pkg_iter->next()) 
+    {
+			foreach($act_pkg->files()) 
+			{
+				#TODO
+			}
+    }
+  }
+  close PACKAGES;
+}
 
 # We're not done yet.  Sort the output in reverse by atime, and
 # add a header/footer.
