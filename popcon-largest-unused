@@ -1,9 +1,11 @@
 #!/bin/sh
 #
 # Author: Yann Dirson <dirson@debian.org>
+# Update: Peter Konc <peter.konc@student.tuke.sk>
 # License: GPL
 
 datafile=/var/log/popularity-contest
+PACKAGE_SYSTEM=$( perl -e 'print qx(unset PACKAGE_SYSTEM; . /etc/popularity-contest.conf; echo \$PACKAGE_SYSTEM )' )
 
 if [ ! -e $datafile ] ; then
     echo "warning: Missing required file $datafile."
@@ -11,8 +13,20 @@ if [ ! -e $datafile ] ; then
     exit 1
 fi
 
-grep '<OLD>' $datafile | cut -d' ' -f3 |
-  xargs -r apt-cache -o 'APT::Cache::AllVersions=0' show |
-  grep -E '^(Package|Installed-Size): ' |
-  perl -ne 'if (/^Package: (.*)/) { $p = $1 };  if (/^Installed-Size: (.*)/) { print "$1 $p\n"; $p = 'BUG' }' |
-  sort -rn
+if [ "$PACKAGE_SYSTEM" == "dpkg" ] ; then
+	grep '<OLD>' $datafile | cut -d' ' -f3 |
+	  xargs -r apt-cache -o 'APT::Cache::AllVersions=0' show |
+	  grep -E '^(Package|Installed-Size): ' |
+	  perl -ne 'if (/^Package: (.*)/) { $p = $1 };  if (/^Installed-Size: (.*)/) { print "$1 $p\n"; $p = 'BUG' }' |
+	  sort -rn
+	  
+elif [ "$PACKAGE_SYSTEM" == "rpm" ] ; then
+	grep '<OLD>' $datafile | cut -d' ' -f3 |
+	  xargs -r rpm -q -a --qf "%{SIZE} %{NAME}\n" | sort -k1,1n |
+	  perl -ne 'use integer; if (/^(.*) (.*)/) { $p = ($1/1000) }; print "$p $2\n";' |
+	  sort -rn
+else 
+	echo "warning: Wrong value - PACKAGE_SYSTEM=\"$PACKAGE_SYSTEM\" in /etc/popularity-contest.conf"
+	echo "info:    Value of PACKAGE_SYSTEM should be \"dpkg\" or \"rpm\""
+	exit 1
+fi
