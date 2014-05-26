@@ -36,7 +36,11 @@ EOF
 
 my $compressed = 1; # Submit reports in a compressed form?
 
-my ($submiturl)  = $opts{'u'} || "http://popcon.debian.org/cgi-bin/popcon.cgi";
+my ($submiturl)  = undef;
+if($PACKAGE_SYSTEM eq "dpkg") { $submiturl = $opts{'u'} || "http://popcon.debian.org/cgi-bin/popcon.cgi"; }
+elsif($PACKAGE_SYSTEM eq "rpm") { $submiturl = $opts{'u'} || "http://popcon.fedora.org/cgi-bin/popcon.cgi"; }
+else { die "PACKAGE_SYSTEM in $popcon_conf is set to incorrect value\n"; }
+
 my ($file)  = $opts{'f'} || "-";
 $compressed = 0 if ($opts{'C'});
 
