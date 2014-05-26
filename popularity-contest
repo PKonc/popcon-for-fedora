@@ -29,6 +29,10 @@ my $dpkg_db="/var/lib/dpkg/info";
 my $dpkg_origin="/etc/dpkg/origins/default";
 my $popcon_conf="/etc/popularity-contest.conf";
 
+#Detecting package system
+my $PACKAGE_SYSTEM = qx(unset PACKAGE_SYSTEM; . $popcon_conf; echo \$PACKAGE_SYSTEM );
+chomp $PACKAGE_SYSTEM;
+
 # $popcon_conf is in shell-script format
 my $HOSTID = qx(unset MY_HOSTID; . $popcon_conf; echo \$MY_HOSTID );
 
