@@ -60,7 +60,7 @@ if ( $HOSTID !~ /^([a-f0-9]{32})$/)
 # Architecture.
 my $arch = undef;  
 if ($PACKAGE_SYSTEM eq 'rpm') {$arch = `rpm --eval '\%{_arch}'`;}
-elsif ($PACKAGE_SYSTEM eq 'deb') {$arch = `dpkg --print-architecture`;}
+elsif ($PACKAGE_SYSTEM eq 'dpkg') {$arch = `dpkg --print-architecture`;}
 else
 {
   print STDERR "Error: PACKAGE_SYSTEM is set to incorrect value\n";
@@ -69,7 +69,10 @@ else
 chomp $arch;
 
 # Popcon release
-my $popconver=`dpkg-query --showformat='\${version}' --show popularity-contest`;
+my $popconver = undef; 
+if ($PACKAGE_SYSTEM eq 'rpm') {$popconver = `rpm -q popularity-contest --queryformat='\%{VERSION}'`;}
+elsif ($PACKAGE_SYSTEM eq 'dpkg') {$popconver = `dpkg-query --showformat='\${version}' --show popularity-contest`;}
+chomp $popconver;
 
 # Vendor
 my $vendor="unknown";
