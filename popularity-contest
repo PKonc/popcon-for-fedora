@@ -28,6 +28,7 @@ use 5.6.0;
 my $dpkg_db="/var/lib/dpkg/info";
 my $dpkg_origin="/etc/dpkg/origins/default";
 my $popcon_conf="/etc/popularity-contest.conf";
+my $os_release = "/etc/os-release";
 
 #Detecting package system
 my $PACKAGE_SYSTEM = qx(unset PACKAGE_SYSTEM; . $popcon_conf; echo \$PACKAGE_SYSTEM );
@@ -76,15 +77,19 @@ chomp $popconver;
 
 # Vendor
 my $vendor="unknown";
-
-if (open(VENDOR, "<", $dpkg_origin))
+if ($PACKAGE_SYSTEM eq 'rpm') {$vendor = qx(unset NAME; . $os_release; echo \$NAME);}
+elsif ($PACKAGE_SYSTEM eq 'dpkg') 
 {
-  while (<VENDOR>)
+  if (open(VENDOR, "<", $dpkg_origin))
   {
-    m/^Vendor: *(.*)/ and $vendor=$1;
+    while (<VENDOR>)
+    {
+      m/^Vendor: *(.*)/ and $vendor=$1;
+    }
+    close(VENDOR);
   }
-  close(VENDOR);
 }
+chomp $vendor;
 
 # Initialise time computations
 
