@@ -111,14 +111,31 @@ print $remote "\r\n";
 print $remote "$form";
 
 #Get answer
-my($answer)="";
-while(<$remote>)
+if($PACKAGE_SYSTEM eq "dpkg")
 {
-  $answer.=$_;
-  m/DEBIAN POPCON HTTP-POST OK/ and last;
+	my($answer)="";
+	while(<$remote>)
+	{
+		$answer.=$_;
+		m/DEBIAN POPCON HTTP-POST OK/ and last;
+	}
+	close ($remote);
+	#Check answer
+	my $status = ($answer =~ m/DEBIAN POPCON HTTP-POST OK/) ? 0 : 1;
+	print "Failed to upload, answer '$answer'\n" if $status && $opts{'d'};
+	exit $status;
 }
-close ($remote);
-#Check answer
-my $status = ($answer =~ m/DEBIAN POPCON HTTP-POST OK/) ? 0 : 1;
-print "Failed to upload, answer '$answer'\n" if $status && $opts{'d'};
-exit $status;
+elsif($PACKAGE_SYSTEM eq "rpm")
+{
+	my($answer)="";
+	while(<$remote>)
+	{
+		$answer.=$_;
+		m/FEDORA POPCON HTTP-POST OK/ and last;
+	}
+	close ($remote);
+	#Check answer
+	my $status = ($answer =~ m/FEDORA POPCON HTTP-POST OK/) ? 0 : 1;
+	print "Failed to upload, answer '$answer'\n" if $status && $opts{'d'};
+	exit $status;
+}
